@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openwork.fullname" . }}
+  labels:
+    {{- include "openwork.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "openwork.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "openwork.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "openwork.serviceAccountName" . }}
+      containers:
+        - name: openwork
+          image: "{{ .Values.image.repository }}:{{ include "openwork.imageTag" . }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - serve
+            - --workspace
+            - {{ .Values.openwork.workspace | quote }}
+            - --openwork-host
+            - "0.0.0.0"
+            - --openwork-port
+            - "8787"
+            - --opencode-host
+            - "127.0.0.1"
+            - --opencode-port
+            - "4096"
+            - --no-opencode-router
+            - --cors
+            - "*"
+            - --approval
+            - {{ .Values.openwork.approvalMode | quote }}
+          env:
+            - name: OPENWORK_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "openwork.fullname" . }}
+                  key: auth-token
+            - name: OPENWORK_DATA_DIR
+              value: /data/openwork-orchestrator
+            - name: OPENWORK_SIDECAR_DIR
+              value: /data/sidecars
+            - name: OPENWORK_WORKSPACE
+              value: {{ .Values.openwork.workspace | quote }}
+            - name: OPENWORK_LOG_FORMAT
+              value: {{ .Values.openwork.logFormat | quote }}
+          ports:
+            - name: http
+              containerPort: 8787
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "openwork.fullname" . }}-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

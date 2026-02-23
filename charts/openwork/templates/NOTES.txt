@@ -1,0 +1,17 @@
+OpenWork has been deployed!
+
+1. Get the OpenWork URL:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+  https://{{ . }}
+{{- end }}
+{{- else }}
+  kubectl port-forward svc/{{ include "openwork.fullname" . }}-http 8787:8787 -n {{ .Release.Namespace }}
+  OpenWork URL: http://localhost:8787
+{{- end }}
+
+2. Get the auth token:
+  kubectl get secret {{ include "openwork.fullname" . }} -n {{ .Release.Namespace }} -o jsonpath='{.data.auth-token}' | base64 -d
+
+3. Check health:
+  curl http://localhost:8787/health

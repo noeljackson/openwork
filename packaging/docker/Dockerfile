@@ -43,6 +43,6 @@ CMD [
   "--opencode-port", "4096",
   "--connect-host", "127.0.0.1",
   "--cors", "*",
-  "--approval", "manual",
+  "--approval", "auto",
   "--no-opencode-router"
 ]

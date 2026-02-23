@@ -1,0 +1,12 @@
+apiVersion: v2
+name: openwork
+description: A Helm chart for deploying OpenWork — agentic coding orchestrator
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+maintainers:
+  - name: Sonica
+    url: https://codespace.sh
+home: https://github.com/noeljackson/openwork
+sources:
+  - https://github.com/noeljackson/openwork

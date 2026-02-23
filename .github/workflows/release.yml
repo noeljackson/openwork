@@ -41,8 +41,6 @@ jobs:
           file: packaging/docker/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64
-          build-args: |
-            OPENWORK_ORCHESTRATOR_VERSION=${{ steps.version.outputs.version }}
           tags: |
             ghcr.io/noeljackson/openwork:${{ github.ref_name }}
             ghcr.io/noeljackson/openwork:${{ steps.version.outputs.version }}
